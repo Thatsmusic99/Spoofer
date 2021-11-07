@@ -5,6 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.StringJoiner;
 
@@ -38,15 +39,19 @@ public final class Spoofer extends JavaPlugin {
         switch (args[0].toLowerCase()) {
             case "add":
                 if (args.length == 1) return false;
-                FakePlayer pl = new FakePlayer(player.getLocation(), args[1]);
-                fakePlayers.put(args[1], pl);
+                FakePlayer pl;
+                try {
+                    pl = new FakePlayer(player.getLocation(), args[1]);
+                    fakePlayers.put(args[1], pl);
+                } catch (NoSuchFieldException | IllegalAccessException | UnknownHostException e) {
+                    e.printStackTrace();
+                }
                 break;
             case "command":
                 if (args.length == 1) return false;
                 String name = args[2];
                 if (!fakePlayers.containsKey(name)) return false;
                 FakePlayer fakePlayer = fakePlayers.get(name);
-                fakePlayer.runCommand(new StringJoiner());
 
         }
         return true;
