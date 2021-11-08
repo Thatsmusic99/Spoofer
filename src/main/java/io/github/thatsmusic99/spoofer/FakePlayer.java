@@ -60,6 +60,12 @@ public class FakePlayer extends ServerPlayer {
                     Spoofer.get().getLogger().info(name + " received the keep alive challenge, responding...");
                     connection.handleKeepAlive(new ServerboundKeepAlivePacket(((ClientboundKeepAlivePacket) packet).getId()));
                 }
+
+                if (isDeadOrDying()) {
+                    Spoofer.get().getLogger().info(name + " is dead, respawning...");
+                    setHealth(20);
+                    Utilities.getPlayerList().respawn(FakePlayer.this, false);
+                }
             }
         };
 
