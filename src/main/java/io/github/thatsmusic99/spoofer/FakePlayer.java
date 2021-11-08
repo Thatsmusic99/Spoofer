@@ -10,6 +10,7 @@ import net.minecraft.network.protocol.game.ServerboundKeepAlivePacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerConnectionListener;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
 
@@ -27,11 +28,13 @@ public class FakePlayer extends ServerPlayer {
     private final Connection connectionSpoof;
     private final SocketAddress bind;
     private final String name;
+    private boolean respawning;
 
     public FakePlayer(Location origin, String name) throws NoSuchFieldException, IllegalAccessException, UnknownHostException {
         super(Utilities.getServer(), ((CraftWorld) origin.getWorld()).getHandle(), Utilities.determineProfile(name));
         this.name = name;
-        world = ((CraftWorld) origin.getWorld()).getHandle();
+        this.respawning = false;
+        this.world = ((CraftWorld) origin.getWorld()).getHandle();
         Spoofer.get().getLogger().info("Initiated FakePlayer");
         bind = new InetSocketAddress(InetAddress.getByName(Utilities.getServer().getLocalIp()), 28000);
         connectionSpoof = new Connection(PacketFlow.CLIENTBOUND) {
@@ -61,10 +64,14 @@ public class FakePlayer extends ServerPlayer {
                     connection.handleKeepAlive(new ServerboundKeepAlivePacket(((ClientboundKeepAlivePacket) packet).getId()));
                 }
 
-                if (isDeadOrDying()) {
-                    Spoofer.get().getLogger().info(name + " is dead, respawning...");
-                    setHealth(20);
-                    Utilities.getPlayerList().respawn(FakePlayer.this, false);
+                if (isDeadOrDying() && !respawning) {
+                    Spoofer.get().getLogger().info(name + " is dead, respawning in 20 ticks...");
+                    respawning = true;
+                    Bukkit.getScheduler().runTaskLater(Spoofer.get(), () -> {
+                        respawning = false;
+                        setHealth(20);
+                        Utilities.getPlayerList().respawn(FakePlayer.this, false);
+                    }, 20);
                 }
             }
         };
