@@ -23,12 +23,14 @@ import java.util.List;
 
 public class FakePlayer extends ServerPlayer {
 
-    private ServerLevel world;
-    private Connection connectionSpoof;
-    private SocketAddress bind;
+    private final ServerLevel world;
+    private final Connection connectionSpoof;
+    private final SocketAddress bind;
+    private final String name;
 
     public FakePlayer(Location origin, String name) throws NoSuchFieldException, IllegalAccessException, UnknownHostException {
         super(Utilities.getServer(), ((CraftWorld) origin.getWorld()).getHandle(), Utilities.determineProfile(name));
+        this.name = name;
         world = ((CraftWorld) origin.getWorld()).getHandle();
         Spoofer.get().getLogger().info("Initiated FakePlayer");
         bind = new InetSocketAddress(InetAddress.getByName(Utilities.getServer().getLocalIp()), 28000);
@@ -79,6 +81,7 @@ public class FakePlayer extends ServerPlayer {
     }
 
     public void runCommand(String command) {
+        Spoofer.get().getLogger().info(name + " is running command " + command);
         getBukkitEntity().performCommand(command);
     }
 }

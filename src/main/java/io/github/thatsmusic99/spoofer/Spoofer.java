@@ -7,7 +7,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.StringJoiner;
 
 public final class Spoofer extends JavaPlugin {
 
@@ -49,9 +48,13 @@ public final class Spoofer extends JavaPlugin {
                 break;
             case "command":
                 if (args.length == 1) return false;
-                String name = args[2];
+                String name = args[1];
                 if (!fakePlayers.containsKey(name)) return false;
                 FakePlayer fakePlayer = fakePlayers.get(name);
+                fakePlayer.runCommand(Utilities.getStringFromArray(args, 2));
+                break;
+            case "listen":
+
 
         }
         return true;

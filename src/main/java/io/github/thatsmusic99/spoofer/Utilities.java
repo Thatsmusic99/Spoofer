@@ -4,11 +4,11 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.players.PlayerList;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class Utilities {
@@ -28,6 +28,7 @@ public class Utilities {
         } catch (NoSuchMethodError ex) {
             Method method;
             try {
+                // Paper missing mappings
                 method = getServer().getClass().getMethod("getPlayerList");
                 return (PlayerList) method.invoke(getServer());
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -35,5 +36,10 @@ public class Utilities {
             }
         }
         return null;
+    }
+
+    public static String getStringFromArray(String[] args, int start) {
+        String[] neededParts = Arrays.copyOfRange(args, start, args.length);
+        return String.join(" ", neededParts);
     }
 }
