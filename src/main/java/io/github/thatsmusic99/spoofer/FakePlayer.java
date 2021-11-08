@@ -90,4 +90,8 @@ public class FakePlayer extends ServerPlayer {
         Spoofer.get().getLogger().info(name + " is running command " + command);
         getBukkitEntity().performCommand(command);
     }
+
+    public void chat(String content) {
+        getBukkitEntity().chat(content);
+    }
 }

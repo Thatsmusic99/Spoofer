@@ -53,9 +53,13 @@ public final class Spoofer extends JavaPlugin {
                 FakePlayer fakePlayer = fakePlayers.get(name);
                 fakePlayer.runCommand(Utilities.getStringFromArray(args, 2));
                 break;
-            case "listen":
-
-
+            case "chat":
+                if (args.length == 1) return false;
+                name = args[1];
+                if (!fakePlayers.containsKey(name)) return false;
+                fakePlayer = fakePlayers.get(name);
+                fakePlayer.chat(Utilities.getStringFromArray(args, 2));
+                break;
         }
         return true;
     }
