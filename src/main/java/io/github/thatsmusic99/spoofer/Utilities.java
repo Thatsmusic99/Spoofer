@@ -4,7 +4,7 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.players.PlayerList;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_17_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_18_R1.CraftServer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -14,8 +14,7 @@ import java.util.UUID;
 public class Utilities {
 
     public static GameProfile determineProfile(String name) {
-
-        return new GameProfile(UUID.nameUUIDFromBytes(name.getBytes()), name);
+        return new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes()), name);
     }
 
     public static DedicatedServer getServer() {

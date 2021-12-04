@@ -5,6 +5,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.game.ClientboundChatPacket;
 import net.minecraft.network.protocol.game.ClientboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.ServerboundKeepAlivePacket;
 import net.minecraft.server.level.ServerLevel;
@@ -12,7 +13,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerConnectionListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -72,6 +73,10 @@ public class FakePlayer extends ServerPlayer {
                         setHealth(20);
                         Utilities.getPlayerList().respawn(FakePlayer.this, false);
                     }, 20);
+                }
+
+                if (packet instanceof ClientboundChatPacket) {
+                    
                 }
             }
         };
