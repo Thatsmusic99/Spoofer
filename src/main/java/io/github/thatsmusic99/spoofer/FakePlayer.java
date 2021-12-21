@@ -2,6 +2,11 @@ package io.github.thatsmusic99.spoofer;
 
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.flattener.ComponentFlattener;
+import net.kyori.adventure.text.flattener.FlattenerListener;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
@@ -13,7 +18,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerConnectionListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -21,6 +28,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.util.HashSet;
 import java.util.List;
 
 public class FakePlayer extends ServerPlayer {
@@ -29,12 +37,14 @@ public class FakePlayer extends ServerPlayer {
     private final Connection connectionSpoof;
     private final SocketAddress bind;
     private final String name;
+    private final HashSet<CommandSender> senders;
     private boolean respawning;
 
     public FakePlayer(Location origin, String name) throws NoSuchFieldException, IllegalAccessException, UnknownHostException {
         super(Utilities.getServer(), ((CraftWorld) origin.getWorld()).getHandle(), Utilities.determineProfile(name));
         this.name = name;
         this.respawning = false;
+        this.senders = new HashSet<>();
         this.world = ((CraftWorld) origin.getWorld()).getHandle();
         Spoofer.get().getLogger().info("Initiated FakePlayer");
         bind = new InetSocketAddress(InetAddress.getByName(Utilities.getServer().getLocalIp()), 28000);
@@ -75,8 +85,11 @@ public class FakePlayer extends ServerPlayer {
                     }, 20);
                 }
 
-                if (packet instanceof ClientboundChatPacket) {
-                    
+                if (packet instanceof ClientboundChatPacket chatPacket) {
+                    Spoofer.get().getLogger().info(String.valueOf(((ClientboundChatPacket) packet).getMessage()));
+                    senders.forEach(sender -> sender.spigot().sendMessage(new ComponentBuilder(name).color(ChatColor.GRAY)
+                            .append(" > ").color(ChatColor.DARK_GRAY).append(getPacketContent(chatPacket)).create()));
+
                 }
             }
         };
@@ -103,7 +116,38 @@ public class FakePlayer extends ServerPlayer {
         getBukkitEntity().performCommand(command);
     }
 
+    public void addChatListener(CommandSender sender) {
+        senders.add(sender);
+    }
+
     public void chat(String content) {
         getBukkitEntity().chat(content);
+    }
+
+    private String getPacketContent(ClientboundChatPacket packet) {
+        try {
+            Field adventureMessage = packet.getClass().getDeclaredField("adventure$message");
+            adventureMessage.setAccessible(true);
+            TextComponent component = (TextComponent) adventureMessage.get(packet);
+            if (component != null) {
+                WhyOhWhy why = new WhyOhWhy();
+                ComponentFlattener.basic().flatten(component, why);
+                return why.result.toString();
+            }
+        } catch (NoSuchFieldException ignored) {
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return packet.getMessage().getString();
+    }
+
+    private static class WhyOhWhy implements FlattenerListener {
+
+        private final StringBuilder result = new StringBuilder();
+
+        @Override
+        public void component(@NotNull String text) {
+            result.append(text);
+        }
     }
 }
