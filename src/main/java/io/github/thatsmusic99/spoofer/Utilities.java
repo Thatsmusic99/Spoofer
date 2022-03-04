@@ -4,7 +4,8 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.players.PlayerList;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_18_R1.CraftServer;
+import org.bukkit.World;
+import org.bukkit.craftbukkit.v1_18_R2.CraftServer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -40,5 +41,12 @@ public class Utilities {
     public static String getStringFromArray(String[] args, int start) {
         String[] neededParts = Arrays.copyOfRange(args, start, args.length);
         return String.join(" ", neededParts);
+    }
+
+    public static World getWorld() {
+        for (World world : Bukkit.getWorlds()) {
+            return world;
+        }
+        return null;
     }
 }

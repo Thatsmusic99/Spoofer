@@ -1,16 +1,18 @@
 package io.github.thatsmusic99.spoofer;
 
+import io.github.thatsmusic99.spoofer.commands.AddCommand;
+import io.github.thatsmusic99.spoofer.commands.ChatCommand;
+import io.github.thatsmusic99.spoofer.commands.ExecuteCommand;
+import io.github.thatsmusic99.spoofer.commands.ListenCommand;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.net.UnknownHostException;
-import java.util.HashMap;
+import org.jetbrains.annotations.NotNull;
 
 public final class Spoofer extends JavaPlugin {
 
-    private HashMap<String, FakePlayer> fakePlayers;
     private static Spoofer instance;
 
     @Override
@@ -18,7 +20,6 @@ public final class Spoofer extends JavaPlugin {
         // Plugin startup logic
         getCommand("spoof").setExecutor(this);
         instance = this;
-        fakePlayers = new HashMap<>();
     }
 
     @Override
@@ -31,43 +32,36 @@ public final class Spoofer extends JavaPlugin {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) return false;
-        Player player = (Player) sender;
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
+                             String[] args) {
+
         if (args.length == 0) return false;
         switch (args[0].toLowerCase()) {
             case "add":
-                if (args.length == 1) return false;
-                FakePlayer pl;
-                try {
-                    pl = new FakePlayer(player.getLocation(), args[1]);
-                    fakePlayers.put(args[1], pl);
-                } catch (NoSuchFieldException | IllegalAccessException | UnknownHostException e) {
-                    e.printStackTrace();
-                }
+                new AddCommand().onCommand(sender, command, label, args);
                 break;
-            case "command":
-                if (args.length == 1) return false;
-                String name = args[1];
-                if (!fakePlayers.containsKey(name)) return false;
-                FakePlayer fakePlayer = fakePlayers.get(name);
-                fakePlayer.runCommand(Utilities.getStringFromArray(args, 2));
+            case "execute":
+                new ExecuteCommand().onCommand(sender, command, label, args);
                 break;
             case "chat":
-                if (args.length == 1) return false;
-                name = args[1];
-                if (!fakePlayers.containsKey(name)) return false;
-                fakePlayer = fakePlayers.get(name);
-                fakePlayer.chat(Utilities.getStringFromArray(args, 2));
+                new ChatCommand().onCommand(sender, command, label, args);
                 break;
             case "listen":
-                if (args.length == 1) return false;
-                name = args[1];
-                if (!fakePlayers.containsKey(name)) return false;
-                fakePlayer = fakePlayers.get(name);
-                fakePlayer.addChatListener(sender);
+                new ListenCommand().onCommand(sender, command, label, args);
                 break;
         }
         return true;
+    }
+
+    public static void sendWarnMessage(CommandSender sender, String message) {
+        sender.sendMessage(Component.text("Spoofer").color(TextColor.color(0xCC5B5A))
+                .append(Component.text(" > ").color(TextColor.color(0x383838)))
+                .append(Component.text(message).color(TextColor.color(0xCC9B9C))));
+    }
+
+    public static void sendMessage(CommandSender sender, String message) {
+        sender.sendMessage(Component.text("Spoofer").color(TextColor.color(0xCC5B5A))
+                .append(Component.text(" > ").color(TextColor.color(0x383838)))
+                .append(Component.text(message).color(TextColor.color(0xC7E7FF))));
     }
 }
