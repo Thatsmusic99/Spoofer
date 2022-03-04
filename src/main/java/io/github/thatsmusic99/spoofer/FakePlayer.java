@@ -8,18 +8,19 @@ import net.kyori.adventure.text.flattener.FlattenerListener;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.minecraft.network.Connection;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.network.protocol.game.ClientboundChatPacket;
-import net.minecraft.network.protocol.game.ClientboundKeepAlivePacket;
-import net.minecraft.network.protocol.game.ServerboundKeepAlivePacket;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerConnectionListener;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
+import org.bukkit.metadata.LazyMetadataValue;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -33,19 +34,17 @@ import java.util.List;
 
 public class FakePlayer extends ServerPlayer {
 
-    private final ServerLevel world;
     private final Connection connectionSpoof;
     private final SocketAddress bind;
     private final String name;
     private final HashSet<CommandSender> senders;
     private boolean respawning;
 
-    public FakePlayer(Location origin, String name) throws NoSuchFieldException, IllegalAccessException, UnknownHostException {
-        super(Utilities.getServer(), ((CraftWorld) origin.getWorld()).getHandle(), Utilities.determineProfile(name));
+    public FakePlayer(String name) throws NoSuchFieldException, IllegalAccessException, UnknownHostException {
+        super(Utilities.getServer(), ((CraftWorld) Utilities.getWorld()).getHandle(), Utilities.determineProfile(name));
         this.name = name;
         this.respawning = false;
         this.senders = new HashSet<>();
-        this.world = ((CraftWorld) origin.getWorld()).getHandle();
         Spoofer.get().getLogger().info("Initiated FakePlayer");
         bind = new InetSocketAddress(InetAddress.getByName(Utilities.getServer().getLocalIp()), 28000);
         connectionSpoof = new Connection(PacketFlow.CLIENTBOUND) {
@@ -70,6 +69,7 @@ public class FakePlayer extends ServerPlayer {
 
             @Override
             public void send(Packet<?> packet, @Nullable GenericFutureListener<? extends Future<? super Void>> genericfuturelistener) {
+                Spoofer.get().getLogger().info("Packet: " + packet.getClass().getSimpleName());
                 if (packet instanceof ClientboundKeepAlivePacket) {
                     Spoofer.get().getLogger().info(name + " received the keep alive challenge, responding...");
                     connection.handleKeepAlive(new ServerboundKeepAlivePacket(((ClientboundKeepAlivePacket) packet).getId()));
@@ -91,6 +91,13 @@ public class FakePlayer extends ServerPlayer {
                             .append(" > ").color(ChatColor.DARK_GRAY).append(getPacketContent(chatPacket)).create()));
 
                 }
+
+                if (packet instanceof ClientboundSetEntityMotionPacket movePacket) {
+                    if (movePacket.getId() == FakePlayer.this.getId()) {
+                        connection.handleMovePlayer(new ServerboundMovePlayerPacket.Pos(movePacket.getXa(), movePacket.getYa(), movePacket.getZa(), isOnGround()));
+                        //setDeltaMovement(new Vec3(movePacket.getXa(), movePacket.getYa(), movePacket.getZa()));
+                    }
+                }
             }
         };
 
@@ -106,9 +113,7 @@ public class FakePlayer extends ServerPlayer {
         }
 
         Utilities.getPlayerList().placeNewPlayer(connectionSpoof, this);
-        Spoofer.get().getLogger().info("Placed new player");
-        setPos(origin.getX(), origin.getY(), origin.getZ());
-        Spoofer.get().getLogger().info("ree " + getStringUUID());
+        getBukkitEntity().setMetadata("spoofed", new LazyMetadataValue(Spoofer.get(), () -> true));
     }
 
     public void runCommand(String command) {
