@@ -6,20 +6,31 @@
 
     <groupId>io.github.thatsmusic99</groupId>
     <artifactId>Spoofer</artifactId>
+    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
 
-    <name>Spoofer</name>
+    <modules>
+        <module>abstraction</module>
+        <module>NMS_Master</module>
+        <module>Version_1.17</module>
+        <module>Version_1.17.1</module>
+        <module>Version_1.18</module>
+        <module>Version_1.18.1</module>
+        <module>Version_1.18.2</module>
+        <module>main</module>
+    </modules>
 
     <properties>
-        <java.version>1.17</java.version>
+        <module.version>0.1</module.version>
+        <module.info></module.info>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.release>17</maven.compiler.release>
-        <spigot.version>1.18-R0.1-SNAPSHOT</spigot.version>
+        <spigot.version>1.17-R0.1-SNAPSHOT</spigot.version>
     </properties>
 
     <build>
+        <defaultGoal>clean install</defaultGoal>
+        <finalName>${project.parent.artifactId}${module.info}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -30,6 +41,49 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.9.0</version>
+                <configuration>
+                    <properties>
+                        <property>
+                            <name>spigot.version</name>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>io.github.thatsmusic99</groupId>
+                                </dependency>
+                            </dependencies>
+                        </property>
+                        <property>
+                            <name>anvilgui.version</name>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>io.github.thatsmusic99</groupId>
+                                </dependency>
+                            </dependencies>
+                        </property>
+                        <property>
+                            <name>module.version</name>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>io.github.thatsmusic99</groupId>
+                                </dependency>
+                            </dependencies>
+                        </property>
+                        <property>
+                            <name>bslib.version</name>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>io.github.thatsmusic99</groupId>
+                                </dependency>
+                            </dependencies>
+                        </property>
+                    </properties>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -46,46 +100,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>net.md-5</groupId>
-                <artifactId>specialsource-maven-plugin</artifactId>
-                <version>1.2.3</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>remap</goal>
-                        </goals>
-                        <id>remap-obf</id>
-                        <configuration>
-                            <srgIn>org.spigotmc:minecraft-server:${spigot.version}:txt:maps-mojang</srgIn>
-                            <reverse>true</reverse>
-                            <remappedDependencies>org.spigotmc:spigot:${spigot.version}:jar:remapped-mojang</remappedDependencies>
-                            <remappedArtifactAttached>true</remappedArtifactAttached>
-                            <remappedClassifierName>remapped-obf</remappedClassifierName>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>remap</goal>
-                        </goals>
-                        <id>remap-spigot</id>
-                        <configuration>
-                            <inputFile>${project.build.directory}/${project.artifactId}-${project.version}-remapped-obf.jar</inputFile>
-                            <srgIn>org.spigotmc:minecraft-server:${spigot.version}:csrg:maps-spigot</srgIn>
-                            <remappedDependencies>org.spigotmc:spigot:${spigot.version}:jar:remapped-obf</remappedDependencies>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
     </build>
 
     <repositories>
@@ -97,6 +112,10 @@
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>bs-public</id>
+            <url>https://repo.pluginwiki.us/repository/maven-releases/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -104,7 +123,6 @@
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>
             <version>${spigot.version}</version>
-            <classifier>remapped-mojang</classifier>
             <scope>provided</scope>
         </dependency>
         <dependency>

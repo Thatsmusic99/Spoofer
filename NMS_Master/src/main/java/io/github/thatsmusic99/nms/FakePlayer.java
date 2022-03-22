@@ -1,5 +1,6 @@
-package io.github.thatsmusic99.spoofer;
+package io.github.thatsmusic99.nms;
 
+import io.github.thatsmusic99.abstraction.IFakePlayer;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.kyori.adventure.text.TextComponent;
@@ -19,7 +20,9 @@ import net.minecraft.server.network.ServerConnectionListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -31,7 +34,7 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.List;
 
-public class FakePlayer extends ServerPlayer {
+public class FakePlayer extends ServerPlayer implements IFakePlayer {
 
     private final ServerLevel world;
     private final Connection connectionSpoof;
@@ -39,14 +42,14 @@ public class FakePlayer extends ServerPlayer {
     private final String name;
     private final HashSet<CommandSender> senders;
     private boolean respawning;
+    private final ControllerMob controllerMob;
 
-    public FakePlayer(Location origin, String name) throws NoSuchFieldException, IllegalAccessException, UnknownHostException {
+    public FakePlayer(Location origin, String name, Plugin plugin) throws NoSuchFieldException, IllegalAccessException, UnknownHostException {
         super(Utilities.getServer(), ((CraftWorld) origin.getWorld()).getHandle(), Utilities.determineProfile(name));
         this.name = name;
         this.respawning = false;
         this.senders = new HashSet<>();
         this.world = ((CraftWorld) origin.getWorld()).getHandle();
-        Spoofer.get().getLogger().info("Initiated FakePlayer");
         bind = new InetSocketAddress(InetAddress.getByName(Utilities.getServer().getLocalIp()), 28000);
         connectionSpoof = new Connection(PacketFlow.CLIENTBOUND) {
             @Override
@@ -71,14 +74,12 @@ public class FakePlayer extends ServerPlayer {
             @Override
             public void send(Packet<?> packet, @Nullable GenericFutureListener<? extends Future<? super Void>> genericfuturelistener) {
                 if (packet instanceof ClientboundKeepAlivePacket) {
-                    Spoofer.get().getLogger().info(name + " received the keep alive challenge, responding...");
                     connection.handleKeepAlive(new ServerboundKeepAlivePacket(((ClientboundKeepAlivePacket) packet).getId()));
                 }
 
                 if (isDeadOrDying() && !respawning) {
-                    Spoofer.get().getLogger().info(name + " is dead, respawning in 20 ticks...");
                     respawning = true;
-                    Bukkit.getScheduler().runTaskLater(Spoofer.get(), () -> {
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
                         respawning = false;
                         setHealth(20);
                         Utilities.getPlayerList().respawn(FakePlayer.this, false);
@@ -86,7 +87,6 @@ public class FakePlayer extends ServerPlayer {
                 }
 
                 if (packet instanceof ClientboundChatPacket chatPacket) {
-                    Spoofer.get().getLogger().info(String.valueOf(((ClientboundChatPacket) packet).getMessage()));
                     senders.forEach(sender -> sender.spigot().sendMessage(new ComponentBuilder(name).color(ChatColor.GRAY)
                             .append(" > ").color(ChatColor.DARK_GRAY).append(getPacketContent(chatPacket)).create()));
 
@@ -106,22 +106,41 @@ public class FakePlayer extends ServerPlayer {
         }
 
         Utilities.getPlayerList().placeNewPlayer(connectionSpoof, this);
-        Spoofer.get().getLogger().info("Placed new player");
         setPos(origin.getX(), origin.getY(), origin.getZ());
-        Spoofer.get().getLogger().info("ree " + getStringUUID());
+        controllerMob = ControllerMob.spawn(origin, this);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                teleportPlayer(origin);
+            }
+        }.runTaskLater(plugin, 2);
     }
 
+    @Override
     public void runCommand(String command) {
-        Spoofer.get().getLogger().info(name + " is running command " + command);
         getBukkitEntity().performCommand(command);
     }
 
+    @Override
     public void addChatListener(CommandSender sender) {
         senders.add(sender);
     }
 
+    @Override
     public void chat(String content) {
         getBukkitEntity().chat(content);
+    }
+
+    @Override
+    public void teleportPlayer(Location location) {
+        teleportTo((ServerLevel) level, location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        controllerMob.teleportTo(location.getX(), location.getY(), location.getZ());
+    }
+
+    @Override
+    public void moveTo(Location location) {
+        if (controllerMob == null) return;
+        controllerMob.setWalkToLocation(location);
     }
 
     private String getPacketContent(ClientboundChatPacket packet) {
@@ -149,5 +168,15 @@ public class FakePlayer extends ServerPlayer {
         public void component(@NotNull String text) {
             result.append(text);
         }
+    }
+
+    @Override
+    public boolean isOnPortalCooldown() {
+        return true; // Prevents mob from teleporting from a portal
+    }
+
+    @Override
+    protected void handleNetherPortal() {
+        // fuck around and find out
     }
 }
