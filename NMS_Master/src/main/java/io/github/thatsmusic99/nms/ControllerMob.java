@@ -14,7 +14,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
 
@@ -42,7 +41,6 @@ public class ControllerMob extends Mob {
         controller.setSilent(true);
         controller.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.6000000238418579);
         boolean value = VersionTranslator.addEntity(level, controller);
-        Bukkit.broadcastMessage("ControllerMob: "+value);
         return controller;
     }
 
