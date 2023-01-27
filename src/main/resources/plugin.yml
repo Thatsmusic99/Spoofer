@@ -1,8 +1,0 @@
-name: Spoofer
-version: '${project.version}'
-main: io.github.thatsmusic99.spoofer.Spoofer
-api-version: 1.18
-
-commands:
-  spoof:
-    description: yes
