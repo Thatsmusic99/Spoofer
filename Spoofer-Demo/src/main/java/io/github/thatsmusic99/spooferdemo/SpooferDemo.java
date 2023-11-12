@@ -11,6 +11,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.InvocationTargetException;
+
 public class SpooferDemo extends JavaPlugin {
 
     private static SpooferDemo instance;
@@ -33,9 +35,11 @@ public class SpooferDemo extends JavaPlugin {
         // Adds
         try {
             ISpoofedPlayer player = SpooferAPI.get().addPlayer(null, "SpooferTester", this);
-            player.addGoal(0, );
         } catch (PlayerAlreadyJoinedException e) {
 
+        } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | InstantiationException |
+                 IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
         return super.onCommand(sender, command, label, args);
     }

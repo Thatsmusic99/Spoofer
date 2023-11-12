@@ -1,7 +1,6 @@
 package io.github.thatsmusic99.spoofer.commands;
 
 import io.github.thatsmusic99.spoofer.Spoofer;
-import io.github.thatsmusic99.spoofer.api.PlayerTracker;
 import io.github.thatsmusic99.spoofer.api.SpooferHandler;
 import io.github.thatsmusic99.spoofer.api.exceptions.PlayerAlreadyJoinedException;
 import org.bukkit.command.Command;

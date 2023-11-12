@@ -1,9 +1,12 @@
 plugins {
     id("java")
+    id("maven-publish")
+    id("io.github.thatsmusic99.java-conventions")
 }
 
 group = "io.github.thatsmusic99"
-version = "unspecified"
+version = "1.0.0-ALPHA.1"
+description = "Spoofer-API"
 
 repositories {
     mavenCentral()

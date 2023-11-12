@@ -8,8 +8,8 @@ import net.kyori.adventure.audience.Audience;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
-import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_19_R3.CraftServer;
+import org.bukkit.craftbukkit.v1_19_R3.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -171,6 +171,11 @@ public class CraftSpoofedPlayer extends CraftPlayer implements ISpoofedPlayer {
     @Override
     public void setLeftHanded(boolean leftHanded) {
         getSpoofedPlayer().getHelper().getBukkitHelper().setLeftHanded(leftHanded);
+    }
+
+    @Override
+    public int getPossibleExperienceReward() {
+        return 0;
     }
 
     @Override

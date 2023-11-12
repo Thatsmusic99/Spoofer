@@ -1,17 +1,23 @@
 package io.github.thatsmusic99.spoofer;
 
 import io.github.thatsmusic99.spoofer.craft.CraftSpoofedPlayer;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.*;
+import io.netty.channel.local.LocalChannel;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.network.Connection;
+import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.PacketListener;
 import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket;
+import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.*;
 import org.bukkit.Bukkit;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -29,19 +35,37 @@ public class FakeConnection extends Connection {
     private final CraftSpoofedPlayer player;
     private final SpoofedPlayer nmsPlayer;
     private final SocketAddress bind;
-    private Channel channel = super.channel;
 
     public FakeConnection(CraftSpoofedPlayer player) throws UnknownHostException {
-        super(PacketFlow.CLIENTBOUND);
+        super(PacketFlow.SERVERBOUND);
         this.player = player;
         this.nmsPlayer = player.getSpoofedPlayer();
         this.bind = new InetSocketAddress(InetAddress.getByName(NMSUtilities.getServer().getLocalIp()), 28000);
+        this.channel = new LocalChannel();
+        this.channel.unsafe().register(new DefaultEventLoop(), new DefaultChannelPromise(this.channel));
+        this.channel.connect(new InetSocketAddress(InetAddress.getByName(NMSUtilities.getServer().getLocalIp()), NMSUtilities.getServer().getServerPort()), this.bind);
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext channelhandlercontext) throws Exception {
+    public void channelActive(@NotNull ChannelHandlerContext channelhandlercontext) throws Exception {
         super.channelActive(channelhandlercontext);
         super.channel = channelhandlercontext.channel();
+        // super.channel.unsafe().register(new DefaultEventLoop(), new DefaultChannelPromise(super.channel));
+    }
+
+    @Override
+    public void setListener(@NotNull PacketListener packetListener) {
+
+        try {
+            for (Field field : getClass().getSuperclass().getDeclaredFields()) {
+                Spoofer.get().getLogger().info(field.getType().getName() + " " + field.getName());
+            }
+            Field listener = this.getClass().getSuperclass().getDeclaredField("p");
+            listener.setAccessible(true);
+            listener.set(this, packetListener);
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -76,7 +100,7 @@ public class FakeConnection extends Connection {
             Bukkit.getScheduler().runTaskLater(Spoofer.get(), () -> {
                 nmsPlayer.setRespawning(false);
                 player.setHealth(20);
-                NMSUtilities.getPlayerList().respawn(nmsPlayer, false);
+                NMSUtilities.getPlayerList().respawn(nmsPlayer, false, PlayerRespawnEvent.RespawnReason.DEATH);
             }, 20);
         }
 

@@ -12,6 +12,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.*;
 import org.bukkit.Bukkit;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -76,7 +77,7 @@ public class FakeConnection extends Connection {
             Bukkit.getScheduler().runTaskLater(Spoofer.get(), () -> {
                 nmsPlayer.setRespawning(false);
                 player.setHealth(20);
-                NMSUtilities.getPlayerList().respawn(nmsPlayer, false);
+                NMSUtilities.getPlayerList().respawn(nmsPlayer, false, PlayerRespawnEvent.RespawnReason.PLUGIN);
             }, 20);
         }
 

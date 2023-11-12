@@ -35,7 +35,7 @@ public class ExecuteCommand implements ISubCommand {
         }
 
         String commandStr = Utilities.getStringFromArray(args, 2);
-        if (player.getBukkitPlayer().performCommand("/" + commandStr)) {
+        if (player.getBukkitPlayer().performCommand(commandStr)) {
             Spoofer.sendMessage(sender, "Player " + args[1] + " has executed the command \"" + commandStr + "\".");
         } else {
             Spoofer.sendWarnMessage(sender, "Player " + args[1] + " has executed the command \"" + commandStr + "\", but the command did not succeed.");

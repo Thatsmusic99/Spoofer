@@ -3,16 +3,22 @@ package io.github.thatsmusic99.spoofer.craft;
 import com.destroystokyo.paper.entity.Pathfinder;
 import com.destroystokyo.paper.entity.ai.Goal;
 import io.github.thatsmusic99.spoofer.SpoofedPlayer;
+import io.github.thatsmusic99.spoofer.Spoofer;
 import io.github.thatsmusic99.spoofer.api.ISpoofedPlayer;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.chat.ChatType;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
-import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R2.CraftServer;
+import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.loot.LootTable;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class CraftSpoofedPlayer extends CraftPlayer implements ISpoofedPlayer {
 
@@ -51,6 +58,41 @@ public class CraftSpoofedPlayer extends CraftPlayer implements ISpoofedPlayer {
         }
 
         return player.getHelper().getBukkitEntity().teleport(location);
+    }
+
+    @Override
+    public void sendMessage(@NotNull String message) {
+        super.sendMessage(message);
+        this.senders.forEach(sender -> Spoofer.sendMessage(sender, getName(), message));
+    }
+
+    @Override
+    public void sendMessage(String... messages) {
+        super.sendMessage(messages);
+
+        this.senders.forEach(sender -> {
+            for (String message : messages) {
+                Spoofer.sendMessage(sender, getName(), message);
+            }
+        });
+    }
+
+    @Override
+    public void sendMessage(@NotNull Component message) {
+        super.sendMessage(message);
+        this.senders.forEach(sender -> Spoofer.sendMessage(sender, getName(), message));
+    }
+
+    @Override
+    public void sendMessage(@NotNull ComponentLike message) {
+        super.sendMessage(message);
+        this.senders.forEach(sender -> Spoofer.sendMessage(sender, getName(), message.asComponent()));
+    }
+
+    @Override
+    public void sendMessage(@NotNull Component message, ChatType.@NotNull Bound boundChatType) {
+        super.sendMessage(message, boundChatType);
+        this.senders.forEach(sender -> Spoofer.sendMessage(sender, getName(), message));
     }
 
     @Override
@@ -174,6 +216,11 @@ public class CraftSpoofedPlayer extends CraftPlayer implements ISpoofedPlayer {
     }
 
     @Override
+    public int getPossibleExperienceReward() {
+        return 0;
+    }
+
+    @Override
     public void setLootTable(@Nullable LootTable table) {
         getSpoofedPlayer().getHelper().getBukkitHelper().setLootTable(table);
     }
@@ -191,5 +238,10 @@ public class CraftSpoofedPlayer extends CraftPlayer implements ISpoofedPlayer {
     @Override
     public long getSeed() {
         return getSpoofedPlayer().getHelper().getBukkitHelper().getSeed();
+    }
+
+    @Override
+    public @Nullable Firework boostElytra(@NotNull ItemStack itemStack) {
+        return null;
     }
 }

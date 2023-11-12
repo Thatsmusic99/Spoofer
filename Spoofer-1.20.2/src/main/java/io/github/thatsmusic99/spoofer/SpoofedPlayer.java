@@ -3,18 +3,18 @@ package io.github.thatsmusic99.spoofer;
 import io.github.thatsmusic99.spoofer.craft.CraftSpoofedPlayer;
 import net.kyori.adventure.audience.Audience;
 import net.minecraft.network.Connection;
+import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerConnectionListener;
 import net.minecraft.world.entity.ai.goal.Goal;
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_19_R2.CraftWorld;
-import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.LazyMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.net.UnknownHostException;
@@ -32,20 +32,20 @@ public class SpoofedPlayer extends ServerPlayer {
     private boolean respawning;
 
     public SpoofedPlayer(Plugin plugin, String name) throws NoSuchFieldException, IllegalAccessException, UnknownHostException {
-        super(NMSUtilities.getServer(), ((CraftWorld) NMSUtilities.getWorld()).getHandle(), NMSUtilities.determineProfile(name));
+        super(NMSUtilities.getServer(), ((CraftWorld) NMSUtilities.getWorld()).getHandle(),
+                NMSUtilities.determineProfile(name), ClientInformation.createDefault());
 
         // Initialise variables
         this.name = name;
         this.respawning = false;
         this.senders = new HashSet<>();
-        this.locale = "en_us";
         this.craftSpoofedPlayer = new CraftSpoofedPlayer(plugin, this);
         this.helper = new PathfinderHelper(this);
         this.connectionSpoof = new FakeConnection(craftSpoofedPlayer);
 
         addPlayer();
 
-        level.addFreshEntity(helper);
+        level().addFreshEntity(helper);
 
         // addGoal(0, new WaterAvoidingRandomStrollGoal(helper, 1.0));
         // addGoal(1, new LookAtPlayerGoal(helper, Player.class, 6.0f));
@@ -66,7 +66,7 @@ public class SpoofedPlayer extends ServerPlayer {
         List<Connection> connections = (List<Connection>) connectionsList.get(listener);
         connections.add(connectionSpoof);
 
-        NMSUtilities.getPlayerList().placeNewPlayer(connectionSpoof, this);
+        NMSUtilities.getPlayerList().placeNewPlayer(connectionSpoof, this, new CommonListenerCookie(gameProfile, 0, clientInformation()));
         getBukkitEntity().setMetadata("spoofed", new LazyMetadataValue(Spoofer.get(), () -> true));
     }
 
@@ -114,7 +114,7 @@ public class SpoofedPlayer extends ServerPlayer {
 
     public void respawnHelper() {
         helper = new PathfinderHelper(this);
-        level.addFreshEntity(helper);
+        level().addFreshEntity(helper);
     }
 
     @Override

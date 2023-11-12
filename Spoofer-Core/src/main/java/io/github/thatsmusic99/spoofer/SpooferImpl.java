@@ -3,13 +3,12 @@ package io.github.thatsmusic99.spoofer;
 import io.github.thatsmusic99.spoofer.api.ISpoofedConnection;
 import io.github.thatsmusic99.spoofer.api.ISpoofedPlayer;
 import io.github.thatsmusic99.spoofer.api.SpooferAPI;
-import io.github.thatsmusic99.spoofer.api.exceptions.PlayerAlreadyJoinedException;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -44,10 +43,10 @@ public class SpooferImpl implements SpooferAPI {
     }
 
     @Override
-    public @NotNull ISpoofedPlayer addPlayer(@Nullable UUID uuid, @NotNull String name, @NotNull Plugin plugin) throws PlayerAlreadyJoinedException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        Class<?> playerClass = Class.forName("io.github.thatsmusic99.spoofer.SpoofedPlayer");
-        Constructor<?> constructor = playerClass.getConstructor(Plugin.class, String.class);
-        ISpoofedPlayer player = (ISpoofedPlayer) constructor.newInstance(plugin, name);
+    public @NotNull ISpoofedPlayer addPlayer(@Nullable UUID uuid, @NotNull String name, @NotNull Plugin plugin) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> nmsClass = Class.forName("io.github.thatsmusic99.spoofer.NMSUtilities");
+        Method method = nmsClass.getDeclaredMethod("createSpoofedPlayer", Plugin.class, String.class);
+        ISpoofedPlayer player = (ISpoofedPlayer) method.invoke(null, plugin, name);
         players.put(name, player);
         return player;
     }

@@ -6,7 +6,7 @@ import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.players.PlayerList;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
+import org.bukkit.craftbukkit.v1_20_R2.CraftServer;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.InvocationTargetException;

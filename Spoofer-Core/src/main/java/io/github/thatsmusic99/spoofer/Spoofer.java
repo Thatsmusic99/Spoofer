@@ -1,10 +1,8 @@
 package io.github.thatsmusic99.spoofer;
 
 import io.github.thatsmusic99.spoofer.api.SpooferHandler;
-import io.github.thatsmusic99.spoofer.commands.AddCommand;
-import io.github.thatsmusic99.spoofer.commands.ChatCommand;
-import io.github.thatsmusic99.spoofer.commands.ExecuteCommand;
-import io.github.thatsmusic99.spoofer.commands.ListenCommand;
+import io.github.thatsmusic99.spoofer.commands.*;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.command.Command;
@@ -54,6 +52,9 @@ public final class Spoofer extends JavaPlugin {
             case "listen":
                 new ListenCommand().onCommand(sender, command, label, args);
                 break;
+            case "bulk":
+                new BulkCommand().onCommand(sender, command, label, args);
+                break;
         }
         return true;
     }
@@ -66,6 +67,18 @@ public final class Spoofer extends JavaPlugin {
 
     public static void sendMessage(CommandSender sender, String message) {
         sender.sendMessage(Component.text("Spoofer").color(TextColor.color(0xCC5B5A))
+                .append(Component.text(" > ").color(TextColor.color(0x383838)))
+                .append(Component.text(message).color(TextColor.color(0xC7E7FF))));
+    }
+
+    public static void sendMessage(Audience sender, String context, Component message) {
+        sender.sendMessage(Component.text(context).color(TextColor.color(0xCC5B5A))
+                .append(Component.text(" > ").color(TextColor.color(0x383838)))
+                .append(message));
+    }
+
+    public static void sendMessage(Audience sender, String context, String message) {
+        sender.sendMessage(Component.text(context).color(TextColor.color(0xCC5B5A))
                 .append(Component.text(" > ").color(TextColor.color(0x383838)))
                 .append(Component.text(message).color(TextColor.color(0xC7E7FF))));
     }

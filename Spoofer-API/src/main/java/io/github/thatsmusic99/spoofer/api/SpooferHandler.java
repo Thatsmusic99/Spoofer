@@ -1,5 +1,8 @@
 package io.github.thatsmusic99.spoofer.api;
 
+/**
+ * Handles the Spoofer API.
+ */
 public class SpooferHandler {
 
     private static SpooferAPI api;

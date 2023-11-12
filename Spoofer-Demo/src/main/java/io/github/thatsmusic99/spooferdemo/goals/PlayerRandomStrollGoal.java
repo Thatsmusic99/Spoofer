@@ -3,20 +3,24 @@ package io.github.thatsmusic99.spooferdemo.goals;
 import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
 import com.destroystokyo.paper.entity.ai.GoalType;
+import io.github.thatsmusic99.spoofer.api.ISpoofedPlayer;
 import io.github.thatsmusic99.spooferdemo.SpooferDemo;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Creature;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 
-public class PlayerRandomStrollGoal implements Goal<Creature> {
+public class PlayerRandomStrollGoal implements Goal<ISpoofedPlayer> {
 
-    private static final GoalKey<Creature> key;
+    private static final GoalKey<ISpoofedPlayer> key;
+    private final ISpoofedPlayer player;
 
     static {
-        key = GoalKey.of(Creature.class, NamespacedKey.fromString("random_stroll", SpooferDemo.get()));
+        key = GoalKey.of(ISpoofedPlayer.class, NamespacedKey.fromString("random_stroll", SpooferDemo.get()));
+    }
+
+    public PlayerRandomStrollGoal(ISpoofedPlayer player) {
+        this.player = player;
     }
 
     @Override
@@ -31,7 +35,7 @@ public class PlayerRandomStrollGoal implements Goal<Creature> {
     }
 
     @Override
-    public @NotNull GoalKey<Creature> getKey() {
+    public @NotNull GoalKey<ISpoofedPlayer> getKey() {
         return key;
     }
 
