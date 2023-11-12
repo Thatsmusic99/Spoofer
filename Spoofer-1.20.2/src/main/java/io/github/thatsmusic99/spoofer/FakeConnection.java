@@ -1,8 +1,15 @@
 package io.github.thatsmusic99.spoofer;
 
+import com.google.common.base.Suppliers;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.github.thatsmusic99.spoofer.craft.CraftSpoofedPlayer;
+import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.local.LocalChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -27,11 +34,18 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.function.Supplier;
 
 public class FakeConnection extends Connection {
 
     private static final HashSet<String> IGNORED_PACKETS = new HashSet<>(Arrays.asList("PacketPlayOutSpawnEntityLiving",
             "ClientboundLevelChunkWithLightPacket"));
+    public static final Supplier<NioEventLoopGroup> CLIENT_IO_GROUP = Suppliers.memoize(() -> {
+        return new NioEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Client IO #%d").setDaemon(true).build());
+    });
+    public static final Supplier<EpollEventLoopGroup> EPOLL_CLIENT_IO_GROUP = Suppliers.memoize(() -> {
+        return new EpollEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Epoll Client IO #%d").setDaemon(true).build());
+    });
     private final CraftSpoofedPlayer player;
     private final SpoofedPlayer nmsPlayer;
     private final SocketAddress bind;
@@ -41,9 +55,17 @@ public class FakeConnection extends Connection {
         this.player = player;
         this.nmsPlayer = player.getSpoofedPlayer();
         this.bind = new InetSocketAddress(InetAddress.getByName(NMSUtilities.getServer().getLocalIp()), 28000);
-        this.channel = new LocalChannel();
-        this.channel.unsafe().register(new DefaultEventLoop(), new DefaultChannelPromise(this.channel));
-        this.channel.connect(new InetSocketAddress(InetAddress.getByName(NMSUtilities.getServer().getLocalIp()), NMSUtilities.getServer().getServerPort()), this.bind);
+        //this.channel = new LocalChannel();
+        //this.channel.unsafe().register(new DefaultEventLoop(), new DefaultChannelPromise(this.channel));
+        //this.channel.connect();
+
+        new Bootstrap().group(CLIENT_IO_GROUP.get()).handler(new ChannelInitializer<>() {
+            @Override
+            protected void initChannel(@NotNull Channel channel) throws Exception {
+                channel.config().setOption(ChannelOption.TCP_NODELAY, true);
+                FakeConnection.this.channel = channel;
+            }
+        }).channel(NioSocketChannel.class).connect(new InetSocketAddress(InetAddress.getByName(NMSUtilities.getServer().getLocalIp()), NMSUtilities.getServer().getServerPort()), this.bind);
     }
 
     @Override
